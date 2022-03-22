@@ -24,5 +24,7 @@ package robotlegs.bender.extensions.mediatorMap.api
 		function mediate(item:Object):void;
 		
 		function unmediate(item:Object):void;
+		
+		function unmediateAll():void;
 	}
 }

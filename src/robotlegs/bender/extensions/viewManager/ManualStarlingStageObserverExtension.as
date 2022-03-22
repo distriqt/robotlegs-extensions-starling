@@ -13,7 +13,9 @@ package robotlegs.bender.extensions.viewManager
 	import robotlegs.bender.extensions.viewManager.impl.StarlingManualStageObserver;
 	import robotlegs.bender.framework.api.IContext;
 	import robotlegs.bender.framework.api.IExtension;
-
+	import robotlegs.bender.framework.api.IInjector;
+	
+	
 	public class ManualStarlingStageObserverExtension implements IExtension
 	{
 
@@ -30,7 +32,7 @@ package robotlegs.bender.extensions.viewManager
 		/* Private Properties                                                         */
 		/*============================================================================*/
 
-		private var _injector:Injector;
+		private var _injector:IInjector;
 
 		/*============================================================================*/
 		/* Public Functions                                                           */
@@ -40,8 +42,8 @@ package robotlegs.bender.extensions.viewManager
 		{
 			_installCount++;
 			_injector = context.injector;
-			context.lifecycle.whenInitializing(handleContextSelfInitialize);
-			context.lifecycle.whenDestroying(handleContextSelfDestroy);
+			context.whenInitializing(handleContextSelfInitialize);
+			context.whenDestroying(handleContextSelfDestroy);
 		}
 
 		/*============================================================================*/

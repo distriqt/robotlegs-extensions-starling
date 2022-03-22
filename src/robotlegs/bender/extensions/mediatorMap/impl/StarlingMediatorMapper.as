@@ -1,23 +1,24 @@
 //------------------------------------------------------------------------------
-//  Copyright (c) 2011 the original author or authors. All Rights Reserved. 
-// 
-//  NOTICE: You are permitted to use, modify, and distribute this file 
-//  in accordance with the terms of the license agreement accompanying it. 
+//  Copyright (c) 2009-2013 the original author or authors. All Rights Reserved.
+//
+//  NOTICE: You are permitted to use, modify, and distribute this file
+//  in accordance with the terms of the license agreement accompanying it.
 //------------------------------------------------------------------------------
 
 package robotlegs.bender.extensions.mediatorMap.impl
 {
 	import flash.utils.Dictionary;
-	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMapping;
-	import robotlegs.bender.extensions.mediatorMap.api.IStarlingMediatorViewHandler;
-	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorMapper;
-	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorMappingConfig;
-	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorMappingFinder;
-	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorUnmapper;
-	import robotlegs.bender.extensions.matching.ITypeMatcher;
 	import robotlegs.bender.extensions.matching.ITypeFilter;
+	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMapping;
+	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorConfigurator;
+	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorMapper;
+	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorUnmapper;
+	import robotlegs.bender.framework.api.ILogger;
 	
-	public class StarlingMediatorMapper implements IMediatorMapper, IMediatorMappingFinder, IMediatorUnmapper
+	/**
+	 * @private
+	 */
+	public class StarlingMediatorMapper implements IMediatorMapper, IMediatorUnmapper
 	{
 		
 		/*============================================================================*/
@@ -26,47 +27,58 @@ package robotlegs.bender.extensions.mediatorMap.impl
 		
 		private const _mappings:Dictionary = new Dictionary();
 		
-		private var _matcher:ITypeFilter;
+		private var _typeFilter:ITypeFilter;
 		
-		private var _handler:IStarlingMediatorViewHandler;
+		private var _handler:StarlingMediatorViewHandler;
+		
+		private var _logger:ILogger;
 		
 		/*============================================================================*/
 		/* Constructor                                                                */
 		/*============================================================================*/
 		
-		public function StarlingMediatorMapper(matcher:ITypeFilter, handler:IStarlingMediatorViewHandler)
+		/**
+		 * @private
+		 */
+		public function StarlingMediatorMapper(typeFilter:ITypeFilter, handler:StarlingMediatorViewHandler, logger:ILogger = null)
 		{
-			_matcher = matcher;
+			_typeFilter = typeFilter;
 			_handler = handler;
+			_logger = logger;
 		}
 		
 		/*============================================================================*/
 		/* Public Functions                                                           */
 		/*============================================================================*/
 		
-		public function toMediator(mediatorClass:Class):IMediatorMappingConfig
+		/**
+		 * @inheritDoc
+		 */
+		public function toMediator(mediatorClass:Class):IMediatorConfigurator
 		{
-			return lockedMappingFor(mediatorClass) || createMapping(mediatorClass);
+			const mapping:IMediatorMapping = _mappings[mediatorClass];
+			return mapping
+					? overwriteMapping(mapping)
+					: createMapping(mediatorClass);
 		}
 		
-		public function forMediator(mediatorClass:Class):IMediatorMapping
-		{
-			return _mappings[mediatorClass];
-		}
-		
+		/**
+		 * @inheritDoc
+		 */
 		public function fromMediator(mediatorClass:Class):void
 		{
 			const mapping:IMediatorMapping = _mappings[mediatorClass];
-			delete _mappings[mediatorClass];
-			_handler.removeMapping(mapping);
+			mapping && deleteMapping(mapping);
 		}
 		
-		public function fromMediators():void
+		/**
+		 * @inheritDoc
+		 */
+		public function fromAll():void
 		{
 			for each (var mapping:IMediatorMapping in _mappings)
 			{
-				delete _mappings[mapping.mediatorClass];
-				_handler.removeMapping(mapping);
+				deleteMapping(mapping);
 			}
 		}
 		
@@ -76,19 +88,28 @@ package robotlegs.bender.extensions.mediatorMap.impl
 		
 		private function createMapping(mediatorClass:Class):MediatorMapping
 		{
-			const mapping:MediatorMapping = new MediatorMapping(_matcher, mediatorClass);
+			const mapping:MediatorMapping = new MediatorMapping(_typeFilter, mediatorClass);
 			_handler.addMapping(mapping);
 			_mappings[mediatorClass] = mapping;
+			_logger && _logger.debug('{0} mapped to {1}', [_typeFilter, mapping]);
 			return mapping;
 		}
 		
-		private function lockedMappingFor(mediatorClass:Class):MediatorMapping
+		private function deleteMapping(mapping:IMediatorMapping):void
 		{
-			const mapping:MediatorMapping = _mappings[mediatorClass];
-			if(mapping)
-				mapping.invalidate();
-			
-			return mapping;
+			_handler.removeMapping(mapping);
+			delete _mappings[mapping.mediatorClass];
+			_logger && _logger.debug('{0} unmapped from {1}', [_typeFilter, mapping]);
+		}
+		
+		private function overwriteMapping(mapping:IMediatorMapping):IMediatorConfigurator
+		{
+			_logger && _logger.warn('{0} already mapped to {1}\n' +
+											'If you have overridden this mapping intentionally you can use "unmap()" ' +
+											'prior to your replacement mapping in order to avoid seeing this message.\n',
+									[_typeFilter, mapping]);
+			deleteMapping(mapping);
+			return createMapping(mapping.mediatorClass);
 		}
 	}
 }

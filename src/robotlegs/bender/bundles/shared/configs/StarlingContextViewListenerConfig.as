@@ -8,34 +8,35 @@
 package robotlegs.bender.bundles.shared.configs
 {
 	import robotlegs.bender.extensions.viewManager.api.IStarlingViewManager;
+	import robotlegs.bender.framework.api.IConfig;
 	
 	import starling.display.DisplayObjectContainer;
-
+	
+	
 	/**
 	 * This simple configuration adds the mapped DisplayObjectContainer ("contextView")
 	 * to the viewManager.
 	 */
-	public class StarlingContextViewListenerConfig
+	public class StarlingContextViewListenerConfig implements IConfig
 	{
-
+		
 		/*============================================================================*/
 		/* Public Properties                                                          */
 		/*============================================================================*/
-
+		
 		[Inject]
 		public var contextView:DisplayObjectContainer;
-
+		
 		[Inject]
 		public var viewManager:IStarlingViewManager;
-
+		
 		/*============================================================================*/
 		/* Public Functions                                                           */
 		/*============================================================================*/
-
-		[PostConstruct]
-		public function init():void
+		
+		public function configure():void
 		{
-			viewManager.addContainer(contextView);
+			viewManager.addContainer( contextView );
 		}
 	}
 }

@@ -1,36 +1,42 @@
 //------------------------------------------------------------------------------
-//  Copyright (c) 2011 the original author or authors. All Rights Reserved. 
-// 
-//  NOTICE: You are permitted to use, modify, and distribute this file 
-//  in accordance with the terms of the license agreement accompanying it. 
+//  Copyright (c) 2009-2013 the original author or authors. All Rights Reserved.
+//
+//  NOTICE: You are permitted to use, modify, and distribute this file
+//  in accordance with the terms of the license agreement accompanying it.
 //------------------------------------------------------------------------------
 
 package robotlegs.bender.extensions.mediatorMap.impl
 {
+	import starling.display.DisplayObject;
 	import flash.utils.Dictionary;
-	
 	import robotlegs.bender.extensions.matching.ITypeMatcher;
 	import robotlegs.bender.extensions.matching.TypeMatcher;
-	import robotlegs.bender.extensions.mediatorMap.api.IMediatorFactory;
+	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMap;
 	import robotlegs.bender.extensions.mediatorMap.api.IStarlingMediatorMap;
-	import robotlegs.bender.extensions.mediatorMap.api.IStarlingMediatorViewHandler;
 	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorMapper;
 	import robotlegs.bender.extensions.mediatorMap.dsl.IMediatorUnmapper;
 	import robotlegs.bender.extensions.viewManager.api.IStarlingViewHandler;
+	import robotlegs.bender.extensions.viewManager.api.IViewHandler;
+	import robotlegs.bender.framework.api.IContext;
+	import robotlegs.bender.framework.api.ILogger;
 	
-	import starling.display.DisplayObject;
-	
+	/**
+	 * @private
+	 */
 	public class StarlingMediatorMap implements IStarlingMediatorMap, IStarlingViewHandler
 	{
+		
 		/*============================================================================*/
 		/* Private Properties                                                         */
 		/*============================================================================*/
 		
 		private const _mappers:Dictionary = new Dictionary();
 		
-		private var _handler:IStarlingMediatorViewHandler;
+		private var _logger:ILogger;
 		
-		private var _factory:IMediatorFactory;
+		private var _factory:MediatorFactory;
+		
+		private var _viewHandler:StarlingMediatorViewHandler;
 		
 		private const NULL_UNMAPPER:IMediatorUnmapper = new NullMediatorUnmapper();
 		
@@ -38,61 +44,91 @@ package robotlegs.bender.extensions.mediatorMap.impl
 		/* Constructor                                                                */
 		/*============================================================================*/
 		
-		public function StarlingMediatorMap(factory:IMediatorFactory, handler:IStarlingMediatorViewHandler = null)
+		/**
+		 * @private
+		 */
+		public function StarlingMediatorMap(context:IContext)
 		{
-			_factory = factory;
-			_handler = handler || new StarlingMediatorViewHandler(_factory);
+			_logger = context.getLogger(this);
+			_factory = new MediatorFactory(context.injector);
+			_viewHandler = new StarlingMediatorViewHandler(_factory);
 		}
 		
 		/*============================================================================*/
 		/* Public Functions                                                           */
 		/*============================================================================*/
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function mapMatcher(matcher:ITypeMatcher):IMediatorMapper
 		{
 			return _mappers[matcher.createTypeFilter().descriptor] ||= createMapper(matcher);
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function map(type:Class):IMediatorMapper
 		{
-			const matcher:ITypeMatcher = new TypeMatcher().allOf(type);
-			return mapMatcher(matcher);
+			return mapMatcher(new TypeMatcher().allOf(type));
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function unmapMatcher(matcher:ITypeMatcher):IMediatorUnmapper
 		{
 			return _mappers[matcher.createTypeFilter().descriptor] || NULL_UNMAPPER;
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function unmap(type:Class):IMediatorUnmapper
 		{
-			const matcher:ITypeMatcher = new TypeMatcher().allOf(type);
-			return unmapMatcher(matcher);
+			return unmapMatcher(new TypeMatcher().allOf(type));
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function handleView(view:DisplayObject, type:Class):void
 		{
-			_handler.handleView(view, type);
+			_viewHandler.handleView(view, type);
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function mediate(item:Object):void
 		{
-			const type:Class = item.constructor;
-			_handler.handleItem(item, type);
+			_viewHandler.handleItem(item, item['constructor'] as Class);
 		}
 		
+		/**
+		 * @inheritDoc
+		 */
 		public function unmediate(item:Object):void
 		{
 			_factory.removeMediators(item);
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		public function unmediateAll():void
+		{
+			_factory.removeAllMediators();
 		}
 		
 		/*============================================================================*/
 		/* Private Functions                                                          */
 		/*============================================================================*/
 		
-		private function createMapper(matcher:ITypeMatcher, viewType:Class = null):IMediatorMapper
+		private function createMapper(matcher:ITypeMatcher):IMediatorMapper
 		{
-			return new StarlingMediatorMapper(matcher.createTypeFilter(), _handler);
+			return new StarlingMediatorMapper(matcher.createTypeFilter(), _viewHandler, _logger);
 		}
 	}
 }

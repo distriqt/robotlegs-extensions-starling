@@ -7,10 +7,11 @@
 
 package robotlegs.bender.extensions.contextView
 {
-	import org.hamcrest.object.instanceOf;
+	import robotlegs.bender.extensions.matching.instanceOfType;
 	
 	import robotlegs.bender.framework.api.IContext;
 	import robotlegs.bender.framework.api.IExtension;
+	import robotlegs.bender.framework.api.IInjector;
 	import robotlegs.bender.framework.api.ILogger;
 	import robotlegs.bender.framework.impl.UID;
 	
@@ -30,7 +31,8 @@ package robotlegs.bender.extensions.contextView
 		/*============================================================================*/
 
 		private const _uid:String = UID.create(StarlingContextViewExtension);
-
+		
+		private var _injector:IInjector;
 		private var _context:IContext;
 
 		private var _logger:ILogger;
@@ -43,9 +45,11 @@ package robotlegs.bender.extensions.contextView
 
 		public function extend(context:IContext):void
 		{
+			_injector = context.injector;
 			_context = context;
 			_logger = context.getLogger(this);
-			_context.addConfigHandler(instanceOf(DisplayObjectContainer), handleContextView);
+			_context.beforeInitializing(beforeInitializing);
+			_context.addConfigHandler(instanceOfType(DisplayObjectContainer), handleContextView);
 		}
 
 		public function toString():String
@@ -61,6 +65,14 @@ package robotlegs.bender.extensions.contextView
 		{
 			_logger.debug("Mapping provided DisplayObjectContainer as contextView...");
 			_context.injector.map(DisplayObjectContainer).toValue(view);
+		}
+		
+		private function beforeInitializing():void
+		{
+//			if (!_injector.hasDirectMapping(ContextView))
+//			{
+//				_logger.error("A ContextView must be installed if you install the ContextViewExtension.");
+//			}
 		}
 	}
 }

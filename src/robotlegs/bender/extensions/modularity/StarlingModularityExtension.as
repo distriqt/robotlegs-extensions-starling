@@ -12,6 +12,7 @@ package robotlegs.bender.extensions.modularity
 	import robotlegs.bender.extensions.modularity.events.StarlingModularContextEvent;
 	import robotlegs.bender.framework.api.IContext;
 	import robotlegs.bender.framework.api.IExtension;
+	import robotlegs.bender.framework.api.IInjector;
 	import robotlegs.bender.framework.api.ILogger;
 	import robotlegs.bender.framework.impl.UID;
 	
@@ -34,7 +35,7 @@ package robotlegs.bender.extensions.modularity
 
 		private var _context:IContext;
 
-		private var _injector:Injector;
+		private var _injector:IInjector;
 
 		private var _logger:ILogger;
 
@@ -69,8 +70,8 @@ package robotlegs.bender.extensions.modularity
 			_context = context;
 			_injector = context.injector;
 			_logger = context.getLogger(this);
-			_context.lifecycle.beforeInitializing(handleContextPreInitialize);
-			_context.lifecycle.beforeDestroying(handleContextPreDestroy);
+			_context.beforeInitializing(handleContextPreInitialize);
+			_context.beforeDestroying(handleContextPreDestroy);
 		}
 
 		public function toString():String
@@ -114,7 +115,7 @@ package robotlegs.bender.extensions.modularity
 		{
 			_logger.debug("Modular context existence message caught. Configuring child module...");
 			event.stopImmediatePropagation();
-			event.context.injector.parentInjector = _context.injector;
+			event.context.injector.parent = _context.injector;
 		}
 	}
 }

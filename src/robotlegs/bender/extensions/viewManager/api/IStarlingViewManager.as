@@ -11,6 +11,8 @@ package robotlegs.bender.extensions.viewManager.api
 
 	public interface IStarlingViewManager
 	{
+		function get containers():Vector.<DisplayObjectContainer>;
+		
 		function addContainer(container:DisplayObjectContainer):void;
 		function removeContainer(container:DisplayObjectContainer):void;
 

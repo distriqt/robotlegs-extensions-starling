@@ -11,7 +11,6 @@ package robotlegs.bender.extensions.mediatorMap.impl
 	import robotlegs.bender.extensions.mediatorMap.api.IStarlingMediatorViewHandler;
 	import robotlegs.bender.extensions.mediatorMap.api.IMediatorMapping;
 	import robotlegs.bender.extensions.matching.ITypeFilter;
-	import robotlegs.bender.extensions.mediatorMap.api.IMediatorFactory;
 	import starling.display.DisplayObject;
 	
 	public class StarlingMediatorViewHandler implements IStarlingMediatorViewHandler
@@ -25,13 +24,13 @@ package robotlegs.bender.extensions.mediatorMap.impl
 		
 		private var _knownMappings:Dictionary = new Dictionary(true);
 		
-		private var _factory:IMediatorFactory;
+		private var _factory:MediatorFactory;
 		
 		/*============================================================================*/
 		/* Public Functions                                                           */
 		/*============================================================================*/
 		
-		public function StarlingMediatorViewHandler(factory:IMediatorFactory):void
+		public function StarlingMediatorViewHandler(factory:MediatorFactory):void
 		{
 			_factory = factory;
 		}

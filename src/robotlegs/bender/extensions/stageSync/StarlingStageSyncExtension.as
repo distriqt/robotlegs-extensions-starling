@@ -7,7 +7,7 @@
 
 package robotlegs.bender.extensions.stageSync
 {
-	import org.hamcrest.object.instanceOf;
+	import robotlegs.bender.extensions.matching.instanceOfType;
 	
 	import robotlegs.bender.framework.api.IContext;
 	import robotlegs.bender.framework.api.IExtension;
@@ -46,7 +46,7 @@ package robotlegs.bender.extensions.stageSync
 		{
 			_context = context;
 			_logger = context.getLogger(this);
-			_context.addConfigHandler(instanceOf(DisplayObjectContainer), handleContextView);
+			_context.addConfigHandler(instanceOfType(DisplayObjectContainer), handleContextView);
 		}
 
 		public function toString():String
@@ -81,7 +81,7 @@ package robotlegs.bender.extensions.stageSync
 		private function initializeContext():void
 		{
 			_logger.debug("Context view is now on stage. Initializing context...");
-			_context.lifecycle.initialize();
+			_context.initialize();
 			_contextView.addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
 		}
 
@@ -89,7 +89,7 @@ package robotlegs.bender.extensions.stageSync
 		{
 			_logger.debug("Context view has left the stage. Destroying context...");
 			_contextView.removeEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
-			_context.lifecycle.destroy();
+			_context.destroy();
 		}
 	}
 }
